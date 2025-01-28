@@ -65,14 +65,7 @@ export function DataTable<TData, TValue>({
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     {index === row.getVisibleCells().length - 1 && (
-                      <div className="flex justify-end  items-center gap-4">
-                        <Link href={`/library/${row.id}`}>
-                          <Button className="bg-red-500"></Button>
-                        </Link>
-                        <Link href={`/library/${row.id}`}>
-                          <Button className="bg-blue-500"></Button>
-                        </Link>
-                      </div>
+                      <div className="flex justify-end  items-center gap-4"></div>
                     )}
                   </TableCell>
                 ))}
