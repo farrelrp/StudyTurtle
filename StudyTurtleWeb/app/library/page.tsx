@@ -2,7 +2,7 @@ import React from "react";
 import { Payment, columns } from "./columns";
 import { DataTable } from "./data-table";
 
-async function getData(): Promise<Payment[]> {
+async function getData() {
   // Fetch data from your API here.
   const data = Array.from({ length: 100 }, (_, index) => ({
     id: `728ed52f-${index}`,

@@ -1,27 +1,39 @@
-import Link from "next/link";
-import { title } from "process";
-import React from "react";
+"use client";
+import { useState } from "react";
 
-const Flashcard = () => {
-  const data = {
-    id: "728ed52f-0",
-    question_count: 10,
-    source: "Slide A.pdf",
-    title: "Flashcard Trivia",
-    description:
-      "This is a description of the flashcard set talking about flashcards and how they are useful for studying.",
-  };
+type FlashcardProps = {
+  question: string;
+  answers?: string[]; // Make answers optional
+  correct: string;
+};
+
+const Flashcard = ({ question, answers = [], correct }: FlashcardProps) => {
+  const [flipped, setFlipped] = useState(false);
+
   return (
-    <Link
-      href="/flashcards/[id]"
-      className="max-w-64 flex flex-col gap-4 justify-center items-center text-center bg-white shadow-md rounded-lg p-6 text-gray-800"
+    <div
+      className="bg-white p-4 rounded-md shadow-md border text-black cursor-pointer "
+      onClick={() => setFlipped(!flipped)}
+      style={{ height: "240px", width: "300px", margin: "10px" }} // Set a fixed height and width for the card
     >
-      <h2 className="font-bold text-2xl">{data.title}</h2>
-      <p className="text-m text-gray-500">{data.description}</p>
-      <p className="text-m text-gray-500 font-bold">
-        {data.source} | {data.question_count} Questions
-      </p>
-    </Link>
+      {flipped ? (
+        <div className="flex flex-col gap-2 justify-center items-center text-center">
+          <h2 className="text-xl font-bold mb-2">Correct Answer</h2>
+          <div className="text-lg">{correct}</div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 justify-center items-center text-center">
+          <h2 className="text-xl font-bold mb-1">{question}</h2>
+          <div>
+            {answers.map((ans, i) => (
+              <div key={i} className="text-lg">
+                {ans}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
