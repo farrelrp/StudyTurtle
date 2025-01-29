@@ -1,7 +1,7 @@
 import React from "react";
-import { Payment, columns } from "./columns";
+import { Flashcard, columns } from "./columns";
 import { DataTable } from "./data-table";
-import UploadPDF from "@/components/UploadPDF";
+import UploadPdfModal from "@/components/UploadPdfModal";
 
 async function getData() {
   // Fetch data from your API here.
@@ -24,7 +24,7 @@ async function LibraryPage() {
           This is the library page. You can upload your study materials here.
         </p>
         <div className="flex justify-center items-center w-full">
-          <UploadPDF />
+          <UploadPdfModal />
         </div>
       </div>
       <div className="container mx-auto py-10">

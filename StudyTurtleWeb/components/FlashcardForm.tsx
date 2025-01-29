@@ -1,6 +1,6 @@
 "use client";
 
-import { formScehma } from "@/schemas/formSchema";
+import { flashcardFormSchema } from "@/schemas/flashcardFormSchema";
 import { z } from "zod";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,13 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 
-type FormValues = z.infer<typeof formScehma>;
+type FormValues = z.infer<typeof flashcardFormSchema>;
 
 export default function FlashcardForm({ pdfId }: { pdfId: string }) {
   const [message, setMessage] = useState("");
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formScehma),
+    resolver: zodResolver(flashcardFormSchema),
     defaultValues: {
       pdfId: pdfId,
       numQuestions: 3,
@@ -52,7 +52,7 @@ export default function FlashcardForm({ pdfId }: { pdfId: string }) {
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col gap-6"
           >
-            {/* Number of Questions Field */}
+            {/* Number of q's */}
             <FormField
               control={form.control}
               name="numQuestions"
@@ -75,7 +75,7 @@ export default function FlashcardForm({ pdfId }: { pdfId: string }) {
               )}
             />
 
-            {/* Additional Request Field */}
+            {/*  additional reqs */}
             <FormField
               control={form.control}
               name="additionalRequest"

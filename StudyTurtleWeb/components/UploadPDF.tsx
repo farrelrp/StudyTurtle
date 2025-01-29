@@ -8,7 +8,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const UploadPDF = () => {
+const UploadPdf = () => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [user] = useAuthState(auth);
@@ -66,4 +66,4 @@ const UploadPDF = () => {
   );
 };
 
-export default UploadPDF;
+export default UploadPdf;
