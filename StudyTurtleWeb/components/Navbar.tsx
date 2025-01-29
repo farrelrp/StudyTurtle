@@ -1,9 +1,12 @@
-import Link from "next/link";
-import React from "react";
-import { signIn, signOut, auth } from "@/auth";
+"use client";
 
-async function Navbar() {
-  const session = await auth();
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import { signInWithGoogle, signOutGoogle } from "@/utils/firebase";
+
+export default function Navbar() {
+  const { user } = useAuth();
+
   return (
     <div className="px-5 py-5 outline-none outline-white w-full z-10 top-0">
       <nav
@@ -13,7 +16,6 @@ async function Navbar() {
         <div className="flex-1"></div>
 
         <Link href={"/"} className="flex justify-center">
-          {/* <img src="https://placehold.co/200x30" alt="Logo" /> */}
           <h1 className="font-extrabold text-2xl text-white">StudyTurtle</h1>
         </Link>
 
@@ -25,27 +27,18 @@ async function Navbar() {
             Flashcards
           </Link>
 
-          {!session ? (
+          {user ? (
             <span className="flex items-center gap-4">
-              <button
-                onClick={async () => {
-                  "use server";
-                  signOut();
-                }}
-                className="hover:text-gray-300"
-              >
+              <span className="text-gray-200">
+                {user.displayName || user.email}
+              </span>
+              <button onClick={signOutGoogle} className="hover:text-gray-300">
                 Sign Out
               </button>
             </span>
           ) : (
-            <button
-              onClick={async () => {
-                "use server";
-                signIn();
-              }}
-              className="hover:text-gray-300"
-            >
-              Sign In
+            <button onClick={signInWithGoogle} className="hover:text-gray-300">
+              Sign In with Google
             </button>
           )}
         </div>
@@ -53,5 +46,3 @@ async function Navbar() {
     </div>
   );
 }
-
-export default Navbar;

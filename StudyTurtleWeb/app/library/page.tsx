@@ -1,6 +1,7 @@
 import React from "react";
 import { Payment, columns } from "./columns";
 import { DataTable } from "./data-table";
+import UploadPDF from "@/components/UploadPDF";
 
 async function getData() {
   // Fetch data from your API here.
@@ -17,13 +18,15 @@ async function LibraryPage() {
   const data = await getData();
   return (
     <>
-      <div className="flex justify-start items-start w-full px-5 py-5 flex-col gap-2 max-w-fit">
+      <div className="flex justify-start items-start w-full px-5 py-5 flex-col gap-2 max-w-full">
         <h1 className="text-3xl text-white font-extrabold">Library Page</h1>
         <p className="text-xl text-white">
           This is the library page. You can upload your study materials here.
         </p>
+        <div className="flex justify-center items-center w-full">
+          <UploadPDF />
+        </div>
       </div>
-
       <div className="container mx-auto py-10">
         <DataTable columns={columns} data={data} />
       </div>
