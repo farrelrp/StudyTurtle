@@ -1,31 +1,29 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { CreateFlashcardButton } from "@/components/CreateFlashcardButton";
 import FlashcardFormModal from "@/components/FlashcardFormModal";
 import { DeleteFileButton } from "@/components/DeleteFileButton";
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
-export type Flashcard = {
+export type Pdf = {
   id: string;
-  amount: number;
+  custom_name: string;
   file_name: string;
   added_at: Date;
 };
 
-export const columns: ColumnDef<Flashcard>[] = [
+export const columns: ColumnDef<Pdf>[] = [
+  {
+    accessorKey: "custom_name",
+    header: "Name",
+  },
   {
     accessorKey: "file_name",
     header: "File Name",
   },
+
   {
     accessorKey: "added_at",
     header: "Added At",
-  },
-  {
-    accessorKey: "amount",
-    header: "Amount",
   },
   {
     id: "actions",

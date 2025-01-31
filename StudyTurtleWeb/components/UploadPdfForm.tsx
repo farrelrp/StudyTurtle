@@ -20,8 +20,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { storage, db, auth } from "@/utils/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { generate } from "short-uuid";
 
 type FormValues = z.infer<typeof uploadPdfSchema>;
 
@@ -30,6 +32,8 @@ export default function UploadPdfForm() {
   const [user] = useAuthState(auth);
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const pdfId = generate();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(uploadPdfSchema),
@@ -44,40 +48,110 @@ export default function UploadPdfForm() {
 
   const handleUpload = async () => {
     const { file, customName } = form.getValues();
-    if (file == undefined || !user) {
-      return console.log("No file selected or not signed in!");
+    if (!file || !user) {
+      console.log("No file selected or not signed in!");
+      return;
     }
+
     setUploading(true);
-    const fileRef = ref(storage, `users/${user.uid}/pdfs/${file.name}`);
 
-    const uploadTask = uploadBytesResumable(fileRef, file);
+    try {
+      // 1. Upload to firestore and firebase storage
+      const fileRef = ref(storage, `users/${user.uid}/pdfs/${pdfId}`);
+      const uploadTask = uploadBytesResumable(fileRef, file);
 
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        // Handle progress
-      },
-      (error) => {
-        // Handle error
-        setUploading(false);
-        console.log("Upload failed!");
-      },
-      async () => {
-        // Handle successful upload
-        const downloadURL = await getDownloadURL(fileRef);
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {},
+        (error) => {
+          setUploading(false);
+          console.error("Upload failed:", error);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(fileRef);
+          const pdfDocRef = doc(db, "users", user.uid, "pdfs", pdfId);
+          await setDoc(pdfDocRef, {
+            name: file.name,
+            url: downloadURL,
+            createdAt: serverTimestamp(),
+            customName: customName,
+            id: pdfId,
+          });
 
-        // Save file metadata to Firestore
-        await addDoc(collection(db, "users", user.uid, "pdfs"), {
-          name: file.name,
-          url: downloadURL,
-          createdAt: serverTimestamp(),
-          customName: customName,
-        });
-        setUploading(false);
-        setUploadSuccess(true);
-        console.log("Upload successful!");
-      }
-    );
+          setUploading(false);
+          console.log("Upload pdf successful done, proceed to embedding");
+
+          // Call the embedding API here
+          try {
+            const idToken = await user.getIdToken();
+            console.log("ID TOKEN " + idToken);
+            console.log("BODY " + JSON.stringify({ pdfId, userId: user.uid }));
+            const embedRes = await fetch("/api/pinecone/upload-embedding", {
+              method: "POST",
+              body: JSON.stringify({
+                pdfId,
+                userId: user.uid,
+                idToken: idToken,
+              }),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            console.log("EMBED RES " + embedRes);
+            const embedData = await embedRes.json();
+            console.log(embedData.message);
+            console.log("Upload done");
+
+            setUploadSuccess(true);
+          } catch (error) {
+            console.error("Error calling embedding API:", error);
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+  };
+
+  //   // Check user state
+  //   console.log("User is:", user);
+  //   const idToken = await getAuth().currentUser?.getIdToken();
+  //   if (user) {
+  //     console.log("TEST");
+  //     console.log("idToken", idToken); // This should print the token if the user is authenticated
+  //   } else {
+  //     console.log("User is not authenticated or signed in.");
+  //   }
+
+  //   const embedRes = await fetch("/api/pinecone/upload-embedding", {
+  //     method: "POST",
+  //     body: JSON.stringify({ pdfId, userId: user.uid }),
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${idToken}`,
+  //     },
+  //   });
+  //   const embedData = await embedRes.json();
+  //   console.log(embedData.message);
+  // } catch (error) {
+  //   console.error("Error uploading file:", error);
+  //   setUploading(false);
+  // }
+  // };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      setFileError("Only PDF files are allowed!");
+      form.setValue("file", undefined);
+      e.target.value = "";
+    } else {
+      setFileError(null);
+      form.setValue("file", file);
+    }
   };
 
   const onSubmit = (data: FormValues) => {
@@ -105,10 +179,9 @@ export default function UploadPdfForm() {
                   <FormControl>
                     <Input
                       type="file"
-                      onChange={(e) => {
-                        form.setValue("file", e.target.files[0]);
-                      }}
+                      onChange={handleFileChange}
                       className="bg-gray-800 text-white"
+                      accept=".pdf"
                     />
                   </FormControl>
                   <FormMessage />
@@ -140,7 +213,6 @@ export default function UploadPdfForm() {
             <div>
               <Button
                 type="submit"
-                onClick={handleUpload}
                 disabled={uploading}
                 className={`${
                   uploadSuccess
