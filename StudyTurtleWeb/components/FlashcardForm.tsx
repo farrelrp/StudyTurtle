@@ -37,8 +37,31 @@ export default function FlashcardForm({ pdfId }: { pdfId: string }) {
 
   const router = useRouter();
 
-  async function onSubmit() {
-    console.log(form.getValues());
+  async function onSubmit(values: FormValues) {
+    try {
+      setMessage("Searching for relevant content...");
+
+      const response = await fetch("/api/pinecone/query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+
+      // do something with the contexts here
+      console.log("Retrieved contexts:", data.contexts);
+      setMessage("Found relevant content!");
+    } catch (error) {
+      console.error("Error:", error);
+      setMessage("Failed to generate flashcards. Please try again.");
+    }
   }
 
   return (

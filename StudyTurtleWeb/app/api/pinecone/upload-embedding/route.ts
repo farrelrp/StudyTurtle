@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
   console.log("POST request started");
 
   try {
-    // Dynamically import PDF parsing libraries only when needed
     const { PDFParser } = await import("pdf2json");
 
     const { pdfId, userId, idToken } = await req.json();
@@ -41,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     const response = await fetch(pdfUrl, {
       headers: {
-        Authorization: `Bearer ${idToken}`, // Attach ID token here
+        Authorization: `Bearer ${idToken}`,
       },
     });
 
@@ -123,8 +122,8 @@ export async function POST(req: NextRequest) {
         values: embedding,
         metadata: {
           pdfId,
-          text: chunks[i], // Add the original chunk text to metadata
-          chunkIndex: i, // Optional: add chunk index for reference
+          text: chunks[i],
+          chunkIndex: i,
         },
       }))
     );

@@ -77,8 +77,6 @@ export default function UploadPdfForm() {
             customName: customName,
             id: pdfId,
           });
-
-          setUploading(false);
           console.log("Upload pdf successful done, proceed to embedding");
 
           // Call the embedding API here
@@ -101,6 +99,7 @@ export default function UploadPdfForm() {
             const embedData = await embedRes.json();
             console.log(embedData.message);
             console.log("Upload done");
+            setUploading(false);
 
             setUploadSuccess(true);
           } catch (error) {
