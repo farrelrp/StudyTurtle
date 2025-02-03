@@ -18,11 +18,13 @@ import { InputWithLabel } from "@/components/InputWithLabel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 type FormValues = z.infer<typeof flashcardFormSchema>;
 
 export default function FlashcardForm({ pdfId }: { pdfId: string }) {
   const [message, setMessage] = useState("");
+  const [user] = useAuthState(auth);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(flashcardFormSchema),
@@ -39,14 +41,17 @@ export default function FlashcardForm({ pdfId }: { pdfId: string }) {
 
   async function onSubmit(values: FormValues) {
     try {
-      setMessage("Searching for relevant content...");
+      setMessage("Generating flashcards...");
 
-      const response = await fetch("/api/pinecone/query", {
+      const response = await fetch("/api/flashcards/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          ...values,
+          userId: user?.uid,
+        }),
       });
 
       const data = await response.json();
@@ -55,9 +60,10 @@ export default function FlashcardForm({ pdfId }: { pdfId: string }) {
         throw new Error(data.error);
       }
 
-      // do something with the contexts here
-      console.log("Retrieved contexts:", data.contexts);
-      setMessage("Found relevant content!");
+      setMessage("Flashcards generated successfully!");
+      console.log("Generated flashcards:", data.flashcards);
+
+      router.push(`/flashcards/${data.flashcardId}`);
     } catch (error) {
       console.error("Error:", error);
       setMessage("Failed to generate flashcards. Please try again.");
