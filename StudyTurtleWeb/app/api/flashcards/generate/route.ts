@@ -7,37 +7,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const FLASHCARD_PROMPT = `
-"You are a helpful AI that generates multiple-choice flashcards based on a given context. I will provide you with a {context}, which contains relevant information, and a {numOfQuestions}, which specifies the number of flashcards needed.
-
-Generate a JSON object with the following structure:
-{
-  "flashcardSetTitle": "A concise title summarizing the topic",
-  "flashcardSetDescription": "A brief overview of what the flashcard set covers",
-  "flashcardSetQuestionCount": {numQuestions},
-  "flashcardQuestions": [
-    {
-      "question": "QUESTION HERE",
-      "options": [
-        "Max 2 sentence answer",
-        "Max 2 sentence answer",
-        "Max 2 sentence answer",
-        "Max 2 sentence answer"
-      ],
-      "correct": "Max 2 sentence answer"
-    }
-  ]
-}
-
-Ensure that:
-Each question is relevant to the {context}.
-The four multiple-choice options are plausible answers, with only one correct. Each answer should be short, max 2 sentences.
-The answers must be SHORT and CONCISE, MAX 2 SENTENCES.
-The correct answer is included in the "correct" field.
-The responses are clear, concise, and informative.
-
-Now, generate the flashcard JSON output based on the provided {context} and {numQuestions}. While making the questions make sure to 
-follow these instructions {additionalRequest}"
+const SYSTEM_PROMPT = `
+You are a helpful AI designed to generate multiple-choice flashcards based on retrieved context from a given document. 
+The flashcards must be accurate, concise, and well-structured for effective learning.
+Make sure all questions are directly based on the provided context and avoid hallucinating information.
 `;
 
 export async function POST(req: Request) {
@@ -71,28 +44,42 @@ export async function POST(req: Request) {
       .map((c: any) => c.text)
       .join("\n\n");
 
-    // Replace placeholders in prompt
-    const prompt = FLASHCARD_PROMPT.replace(
-      "{numQuestions}",
-      String(numQuestions)
-    )
-      .replace("{additionalRequest}", additionalRequest)
-      .replace("{context}", combinedContext)
-      .replace("{additionalRequest}", additionalRequest);
+    const userPrompt = `
+You will generate multiple-choice flashcards based on the provided context. Follow these guidelines:
+
+- Ensure each question is directly derived from the context.
+- Provide **four answer choices**, with only one correct.
+- Keep answers **short and concise (max 2 sentences).**
+- Format the response strictly in JSON format.
+
+### **Context**:
+${combinedContext}
+
+### **Instructions**:
+- Number of Questions: ${numQuestions}
+- Additional Request: ${additionalRequest}
+
+### **Expected JSON Output Format**:
+{
+  "flashcardSetTitle": "A short, relevant title",
+  "flashcardSetDescription": "Brief summary of what this flashcard set covers",
+  "flashcardSetQuestionCount": ${numQuestions},
+  "flashcardQuestions": [
+    {
+      "question": "QUESTION TEXT",
+      "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+      "correct": "Correct Option"
+    }
+  ]
+}
+`;
 
     // Generate flashcards using OpenAI
     const completion = await openai.chat.completions.create({
       model: "gpt-4-turbo-preview",
       messages: [
-        {
-          role: "system",
-          content:
-            "You are a helpful assistant that creates flashcards based on provided context. Return only valid JSON.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
       ],
       response_format: { type: "json_object" },
     });

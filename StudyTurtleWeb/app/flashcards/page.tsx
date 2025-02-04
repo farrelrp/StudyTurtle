@@ -1,21 +1,37 @@
+"use client";
+
 import FlashcardSelection from "@/components/FlashcardSelection";
 import React from "react";
+import { auth } from "@/utils/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
 
-// Server Action to Fetch Data
-async function getFlashcards() {
-  "use server"; // Server action
-  return Array.from({ length: 10 }, (_, index) => ({
-    id: `728ed52f-${index}`,
-    question_count: 10,
-    source: `Slide ${index}.pdf`,
-    title: `Flashcard Set ${index}`,
-    description: `This is a description of the flashcard set talking about flashcards and how they are useful for studying.`,
-  }));
-}
+export default function FlashcardsPage() {
+  const [user] = useAuthState(auth);
+  const [data, setData] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
 
-// Flashcards Page Component
-export default async function FlashcardsPage() {
-  const data = await getFlashcards(); // Fetch data on the server
+  React.useEffect(() => {
+    if (!user) return;
+
+    async function fetchData() {
+      try {
+        const response = await fetch(`/api/flashcards?userId=${user?.uid}`);
+        const result = await response.json();
+        console.log("Flashcards result:", result);
+        setData(result.flashcards);
+      } catch (error) {
+        console.error("Error fetching flashcards:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [user]);
+
+  if (!user || loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
@@ -30,9 +46,20 @@ export default async function FlashcardsPage() {
         </div>
       </div>
       <div className="flex justify-center items-center w-full px-5 py-5 gap-8">
-        <div className="grid grid-cols-1 gap- md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {data.map((flashcard) => (
-            <FlashcardSelection key={flashcard.id} {...flashcard} />
+            <FlashcardSelection
+              key={flashcard.id}
+              id={flashcard.id}
+              pdfId={flashcard.pdfId} // PDF Source
+              flashcardSetTitle={flashcard.flashcards.flashcardSetTitle}
+              flashcardSetDescription={
+                flashcard.flashcards.flashcardSetDescription
+              }
+              flashcardSetQuestionCount={
+                flashcard.flashcards.flashcardSetQuestionCount
+              }
+            />
           ))}
         </div>
       </div>

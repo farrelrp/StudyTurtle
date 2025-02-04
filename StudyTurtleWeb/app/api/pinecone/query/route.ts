@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     // hit up pinecone with our search
     const queryResponse = await index.namespace(pdfId).query({
       vector: queryEmbedding,
-      topK: 10,
+      topK: 40,
       includeMetadata: true,
     });
 
