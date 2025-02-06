@@ -5,26 +5,16 @@ import { NextResponse } from "next/server";
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
-    const pdfId = searchParams.get("pdfId");
     const flashcardId = searchParams.get("flashcardId");
 
-    if (!userId || !pdfId || !flashcardId) {
+    if (!flashcardId) {
       return NextResponse.json(
-        { error: "User ID, PDF ID, and Flashcard ID are required" },
+        { error: "Flashcard ID is required" },
         { status: 400 }
       );
     }
 
-    const flashcardDocRef = doc(
-      db,
-      "users",
-      userId,
-      "pdfs",
-      pdfId,
-      "flashcards",
-      flashcardId
-    );
+    const flashcardDocRef = doc(db, "flashcards", flashcardId);
     const flashcardSnapshot = await getDoc(flashcardDocRef);
 
     if (!flashcardSnapshot.exists()) {

@@ -14,7 +14,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { InputWithLabel } from "@/components/InputWithLabel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -26,6 +25,7 @@ type FormValues = z.infer<typeof flashcardFormSchema>;
 export default function FlashcardForm({ pdfId }: { pdfId: string }) {
   const [message, setMessage] = useState("");
   const [user] = useAuthState(auth);
+  const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(flashcardFormSchema),
@@ -41,6 +41,7 @@ export default function FlashcardForm({ pdfId }: { pdfId: string }) {
   const router = useRouter();
 
   async function onSubmit(values: FormValues) {
+    setSubmitting(true);
     try {
       setMessage("Generating flashcards...");
 
@@ -68,6 +69,9 @@ export default function FlashcardForm({ pdfId }: { pdfId: string }) {
     } catch (error) {
       console.error("Error:", error);
       setMessage("Failed to generate flashcards. Please try again.");
+    } finally {
+      setSubmitting(false);
+      form.reset();
     }
   }
 
@@ -82,7 +86,7 @@ export default function FlashcardForm({ pdfId }: { pdfId: string }) {
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col gap-6"
           >
-            {/* Number of q's */}
+            {/* Number of Questions */}
             <FormField
               control={form.control}
               name="numQuestions"
@@ -105,7 +109,7 @@ export default function FlashcardForm({ pdfId }: { pdfId: string }) {
               )}
             />
 
-            {/*  additional reqs */}
+            {/* Additional Request */}
             <FormField
               control={form.control}
               name="additionalRequest"
@@ -125,7 +129,9 @@ export default function FlashcardForm({ pdfId }: { pdfId: string }) {
             />
 
             <div className="flex justify-center gap-4">
-              <Button type="submit">Create Flashcards</Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Creating..." : "Create Flashcards"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"

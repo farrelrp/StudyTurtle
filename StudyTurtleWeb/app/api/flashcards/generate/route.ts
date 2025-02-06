@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { db } from "@/utils/firebase";
-import { collection, addDoc, doc } from "firebase/firestore";
+import { collection, setDoc, doc } from "firebase/firestore";
+import { generate } from "short-uuid";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -16,8 +17,9 @@ Make sure all questions are directly based on the provided context and avoid hal
 export async function POST(req: Request) {
   try {
     const { userId, pdfId, numQuestions, additionalRequest } = await req.json();
+    const flashcardId = generate();
 
-    // First, get contexts from our query endpoint
+    // Get contexts from Pinecone
     const queryResponse = await fetch(
       "http://localhost:3000/api/pinecone/query",
       {
@@ -74,9 +76,9 @@ ${combinedContext}
 }
 `;
 
-    // Generate flashcards using OpenAI
+    // Generate flashcards
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userPrompt },
@@ -86,16 +88,27 @@ ${combinedContext}
 
     const flashcardsJson = JSON.parse(completion.choices[0].message.content);
 
-    // Store in Firestore
-    const flashcardsRef = collection(
+    // Store in each user document
+    const flashcardsRef = doc(
       db,
       "users",
       userId,
       "pdfs",
       pdfId,
-      "flashcards"
+      "flashcards",
+      flashcardId
     );
-    const docRef = await addDoc(flashcardsRef, {
+    const docRef = await setDoc(flashcardsRef, {
+      flashcards: flashcardsJson,
+      createdAt: new Date().toISOString(),
+      numQuestions,
+      additionalRequest,
+    });
+
+    // Store in global flashcards collection (idk if this is the right way to do it sih)
+
+    const globalFlashcardsRef = doc(db, "flashcards", flashcardId);
+    await setDoc(globalFlashcardsRef, {
       flashcards: flashcardsJson,
       createdAt: new Date().toISOString(),
       numQuestions,
@@ -104,7 +117,7 @@ ${combinedContext}
 
     return NextResponse.json({
       success: true,
-      flashcardId: docRef.id,
+      flashcardId: flashcardId,
       flashcards: flashcardsJson,
     });
   } catch (error) {

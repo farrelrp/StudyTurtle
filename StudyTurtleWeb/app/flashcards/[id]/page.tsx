@@ -1,99 +1,38 @@
-import React from "react";
+"use client";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import Flashcard from "@/components/Flashcard";
 
-async function getMetadata() {
-  "use server";
-  return {
-    title: "Flashcard Set 1",
-    description:
-      "This is a description of the flashcard set talking about flashcards and how they are useful for studying.",
-  };
+async function getFlashcards(id: string) {
+  const response = await fetch(
+    `/api/flashcards/get_card_by_id/?flashcardId=${id}`
+  );
+  const data = await response.json();
+  console.log("Flashcards data:", data);
+  console.log(data.flashcard.flashcards.flashcardSetQuestionCount);
+  return data.flashcard.flashcards;
 }
 
-async function getFlashcardsQuestions() {
-  "use server";
-  return [
-    {
-      question: "What is the capital of France?",
-      answers: ["Paris", "London", "Berlin", "Madrid"],
-      correct: "Paris",
-    },
-    {
-      question: "What is the capital of Germany?",
-      answers: ["Paris", "London", "Berlin", "Madrid"],
-      correct: "Berlin",
-    },
-    {
-      question: "What is the capital of Spain?",
-      answers: ["Paris", "London", "Berlin", "Madrid"],
-      correct: "Madrid",
-    },
-    {
-      question: "What is the capital of England?",
-      answers: ["Max three words.", "London", "Berlin", "Madrid"],
-      correct: "London",
-    },
-    {
-      question: "What is the capital of England?",
-      answers: ["Max three words.", "London", "Berlin", "Madrid"],
-      correct: "London",
-    },
-    {
-      question: "What is the capital of France?",
-      answers: ["Paris", "London", "Berlin", "Madrid"],
-      correct: "Paris",
-    },
-    {
-      question: "What is the capital of Germany?",
-      answers: ["Paris", "London", "Berlin", "Madrid"],
-      correct: "Berlin",
-    },
-    {
-      question: "What is the capital of Spain?",
-      answers: ["Paris", "London", "Berlin", "Madrid"],
-      correct: "Madrid",
-    },
-    {
-      question: "What is the capital of England?",
-      answers: ["Max three words.", "London", "Berlin", "Madrid"],
-      correct: "London",
-    },
-    {
-      question: "What is the capital of England?",
-      answers: ["Max three words.", "London", "Berlin", "Madrid"],
-      correct: "London",
-    },
-    {
-      question: "What is the capital of France?",
-      answers: ["Paris", "London", "Berlin", "Madrid"],
-      correct: "Paris",
-    },
-    {
-      question: "What is the capital of Germany?",
-      answers: ["Paris", "London", "Berlin", "Madrid"],
-      correct: "Berlin",
-    },
-    {
-      question: "What is the capital of Spain?",
-      answers: ["Paris", "London", "Berlin", "Madrid"],
-      correct: "Madrid",
-    },
-    {
-      question: "What is the capital of England?",
-      answers: ["Max three words.", "London", "Berlin", "Madrid"],
-      correct: "London",
-    },
-    {
-      question: "What is the capital of England?",
-      answers: ["Max three words.", "London", "Berlin", "Madrid"],
-      correct: "London",
-    },
-  ];
-}
+function FlashcardGame() {
+  const { id } = useParams();
+  const [flashcards, setFlashcards] = useState([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
-async function FlashcardGame() {
-  const { title, description } = await getMetadata();
-  const flashcards = await getFlashcardsQuestions();
+  useEffect(() => {
+    if (id) {
+      getFlashcards(id as string).then((data) => {
+        setFlashcards(data.flashcardQuestions);
+        setTitle(data.flashcardSetTitle);
+        setDescription(data.flashcardSetDescription);
+      });
+    }
+  }, [id]);
+
+  if (!id) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <>
       <div className="flex justify-start items-start w-full px-5 py-5 flex-col gap-2 max-w-fit">

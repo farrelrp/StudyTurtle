@@ -15,7 +15,9 @@ export default function FlashcardsPage() {
 
     async function fetchData() {
       try {
-        const response = await fetch(`/api/flashcards?userId=${user?.uid}`);
+        const response = await fetch(
+          `/api/flashcards/get_cards?userId=${user?.uid}`
+        );
         const result = await response.json();
         console.log("Flashcards result:", result);
         setData(result.flashcards);

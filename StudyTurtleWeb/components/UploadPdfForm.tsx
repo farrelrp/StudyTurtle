@@ -4,7 +4,6 @@ import { uploadPdfSchema } from "@/schemas/uploadPdfSchema";
 import { z } from "zod";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Form,
@@ -14,14 +13,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { InputWithLabel } from "@/components/InputWithLabel";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { storage, db, auth } from "@/utils/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { generate } from "short-uuid";
 
@@ -43,8 +39,6 @@ export default function UploadPdfForm() {
     },
     mode: "onBlur",
   });
-
-  const router = useRouter();
 
   const handleUpload = async () => {
     const { file, customName } = form.getValues();

@@ -24,7 +24,7 @@ const FlashcardSelection = ({
       <h2 className="font-bold text-2xl">{flashcardSetTitle}</h2>
       <p className="text-m text-gray-500">{flashcardSetDescription}</p>
       <p className="text-m text-gray-500 font-bold">
-        PDF: {pdfId} | {flashcardSetQuestionCount} Questions
+        {flashcardSetQuestionCount} Questions
       </p>
     </Link>
   );
